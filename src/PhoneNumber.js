@@ -11,8 +11,10 @@ import { providerStyles } from "./providerStyles";
 import React, { useEffect, useRef, useState } from "react";
 import { errors } from "./Errors";
 import { translate, translateError } from "./Languages";
+import {isValidPhoneNumber, parsePhoneNumber} from "libphonenumber-js/min";
 
 export default function PhoneNumber({
+                                      whitelistedCountries = [],
   setSendSMS,
   setAlert,
   setError,
@@ -47,6 +49,126 @@ export default function PhoneNumber({
   const [name, setName] = useState("");
   const [selectedHint, setSelectedHint] = useState(0);
 
+
+
+  const allCountries = [
+    { value: '+1', label: '🇺🇸 United States +1' },
+    { value: '+358', label: '🇦🇽 Aland Islands +358' },
+    { value: '+213', label: '🇩🇿 Algeria +213' },
+    { value: '+244', label: '🇦🇴 Angola +244' },
+    { value: '+1264', label: '🇦🇮 Anguilla +1264' },
+    { value: '+61', label: '🇦🇺 Australia +61' },
+    { value: '+43', label: '🇦🇹 Austria +43' },
+    { value: '+1', label: '🇧🇸 Bahamas +1' },
+    { value: '+973', label: '🇧🇭 Bahrain +973' },
+    { value: '+880', label: '🇧🇩 Bangladesh +880' },
+    { value: '+375', label: '🇧🇾 Belarus +375' },
+    { value: '+32', label: '🇧🇪 Belgium +32' },
+    { value: '+229', label: '🇧🇯 Benin +229' },
+    { value: '+591', label: '🇧🇴 Bolivia +591' },
+    { value: '+387', label: '🇧🇦 Bosnia and Herzegovina +387' },
+    { value: '+673', label: '🇧🇳 Brunei +673' },
+    { value: '+359', label: '🇧🇬 Bulgaria +359' },
+    { value: '+257', label: '🇧🇮 Burundi +257' },
+    { value: '+855', label: '🇰🇭 Cambodia +855' },
+    { value: '+1', label: '🇨🇦 Canada +1' },
+    { value: '+238', label: '🇨🇻 Cape Verde +238' },
+    { value: '+1345', label: '🇰🇾 Cayman Islands +1345' },
+    { value: '+61', label: '🇨🇽 Christmas Island +61' },
+    { value: '+61', label: '🇨🇨 Cocos +61' },
+    { value: '+243', label: '🇨🇩 Congo, Dem Rep +243' },
+    { value: '+385', label: '🇭🇷 Croatia +385' },
+    { value: '+357', label: '🇨🇾 Cyprus +357' },
+    { value: '+420', label: '🇨🇿 Czech Republic +420' },
+    { value: '+45', label: '🇩🇰 Denmark +45' },
+    { value: '+1767', label: '🇩🇲 Dominica +1767' },
+    { value: '+1', label: '🇩🇴 Dominican Republic +1' },
+    { value: '+593', label: '🇪🇨 Ecuador +593' },
+    { value: '+240', label: '🇬🇶 Equatorial Guinea +240' },
+    { value: '+372', label: '🇪🇪 Estonia +372' },
+    { value: '+358', label: '🇫🇮 Finland/Aland Islands +358' },
+    { value: '+33', label: '🇫🇷 France +33' },
+    { value: '+220', label: '🇬🇲 Gambia +220' },
+    { value: '+995', label: '🇬🇪 Georgia +995' },
+    { value: '+49', label: '🇩🇪 Germany +49' },
+    { value: '+233', label: '🇬🇭 Ghana +233' },
+    { value: '+350', label: '🇬🇮 Gibraltar +350' },
+    { value: '+30', label: '🇬🇷 Greece +30' },
+    { value: '+502', label: '🇬🇹 Guatemala +502' },
+    { value: '+592', label: '🇬🇾 Guyana +592' },
+    { value: '+36', label: '🇭🇺 Hungary +36' },
+    { value: '+354', label: '🇮🇸 Iceland +354' },
+    { value: '+62', label: '🇮🇩 Indonesia +62' },
+    { value: '+91', label: '🇮🇳 India +91' },
+    { value: '+353', label: '🇮🇪 Ireland +353' },
+    { value: '+972', label: '🇮🇱 Israel +972' },
+    { value: '+39', label: '🇮🇹 Italy +39' },
+    { value: '+225', label: '🇨🇮 Ivory Coast +225' },
+    { value: '+1876', label: '🇯🇲 Jamaica +1876' },
+    { value: '+81', label: '🇯🇵 Japan +81' },
+    { value: '+962', label: '🇯🇴 Jordan +962' },
+    { value: '+7', label: '🇰🇿 Kazakhstan +7' },
+    { value: '+965', label: '🇰🇼 Kuwait +965' },
+    { value: '+371', label: '🇱🇻 Latvia +371' },
+    { value: '+218', label: '🇱🇾 Libya +218' },
+    { value: '+423', label: '🇱🇮 Liechtenstein +423' },
+    { value: '+370', label: '🇱🇹 Lithuania +370' },
+    { value: '+352', label: '🇱🇺 Luxembourg +352' },
+    { value: '+261', label: '🇲🇬 Madagascar +261' },
+    { value: '+265', label: '🇲🇼 Malawi +265' },
+    { value: '+60', label: '🇲🇾 Malaysia +60' },
+    { value: '+960', label: '🇲🇻 Maldives +960' },
+    { value: '+223', label: '🇲🇱 Mali +223' },
+    { value: '+356', label: '🇲🇹 Malta +356' },
+    { value: '+230', label: '🇲🇺 Mauritius +230' },
+    { value: '+52', label: '🇲🇽 Mexico +52' },
+    { value: '+377', label: '🇲🇨 Monaco +377' },
+    { value: '+382', label: '🇲🇪 Montenegro +382' },
+    { value: '+1664', label: '🇲🇸 Montserrat +1664' },
+    { value: '+258', label: '🇲🇿 Mozambique +258' },
+    { value: '+264', label: '🇳🇦 Namibia +264' },
+    { value: '+31', label: '🇳🇱 Netherlands +31' },
+    { value: '+599', label: '🇳🇱 Netherlands Antilles +599' },
+    { value: '+64', label: '🇳🇿 New Zealand +64' },
+    { value: '+234', label: '🇳🇬 Nigeria +234' },
+    { value: '+47', label: '🇳🇴 Norway +47' },
+    { value: '+63', label: '🇵🇭 Philippines +63' },
+    { value: '+48', label: '🇵🇱 Poland +48' },
+    { value: '+351', label: '🇵🇹 Portugal +351' },
+    { value: '+974', label: '🇶🇦 Qatar +974' },
+    { value: '+40', label: '🇷🇴 Romania +40' },
+    { value: '+250', label: '🇷🇼 Rwanda +250' },
+    { value: '+221', label: '🇸🇳 Senegal +221' },
+    { value: '+381', label: '🇷🇸 Serbia +381' },
+    { value: '+248', label: '🇸🇨 Seychelles +248' },
+    { value: '+65', label: '🇸🇬 Singapore +65' },
+    { value: '+421', label: '🇸🇰 Slovakia +421' },
+    { value: '+386', label: '🇸🇮 Slovenia +386' },
+    { value: '+27', label: '🇿🇦 South Africa +27' },
+    { value: '+82', label: '🇰🇷 South Korea +82' },
+    { value: '+34', label: '🇪🇸 Spain +34' },
+    { value: '+94', label: '🇱🇰 Sri Lanka +94' },
+    { value: '+1758', label: '🇱🇨 St Lucia +1758' },
+    { value: '+249', label: '🇸🇩 Sudan +249' },
+    { value: '+46', label: '🇸🇪 Sweden +46' },
+    { value: '+41', label: '🇨🇭 Switzerland +41' },
+    { value: '+886', label: '🇹🇼 Taiwan +886' },
+    { value: '+255', label: '🇹🇿 Tanzania +255' },
+    { value: '+228', label: '🇹🇬 Togo +228' },
+    { value: '+1868', label: '🇹🇹 Trinidad and Tobago +1868' },
+    { value: '+1649', label: '🇹🇨 Turks and Caicos Islands +1649' },
+    { value: '+256', label: '🇺🇬 Uganda +256' },
+    { value: '+971', label: '🇦🇪 United Arab Emirates +971' },
+    { value: '+44', label: '🇬🇧 United Kingdom +44' },
+    { value: '+1', label: '🇺🇸 United States +1' },
+    { value: '+998', label: '🇺🇿 Uzbekistan +998' },
+    { value: '+58', label: '🇻🇪 Venezuela +58' }
+  ];
+
+  const filteredCountries = whitelistedCountries?.length > 0
+      ? allCountries.filter(country => whitelistedCountries?.includes(country.value))
+      : allCountries;
+
   const processNetworkError = error => {
     error = JSON.parse(JSON.stringify(error));
     if (
@@ -69,7 +191,9 @@ export default function PhoneNumber({
     setPhoneNumberValid(
       enterCode || mfaSignIn
         ? true
-        : /^\d{3}-\d{3}-\d{4}$/.test(phoneNumber) &&
+        //: parsePhoneNumber(countryCode+phoneNumber) &&
+        : isValidPhoneNumber(countryCode+phoneNumber) &&
+        //: /^\d{3}-\d{3}-\d{4}$/.test(phoneNumber) &&
             (displayName == "required" ? name.length > 0 : true),
     );
   }, [phoneNumber, name]);
@@ -329,7 +453,10 @@ export default function PhoneNumber({
               value={countryCode}
               onChange={e => setCountryCode(e.target.value)}
             >
-              <option value="+1">🇺🇸 United States +1</option>
+              {filteredCountries.map(country => (
+                  <option key={country.value} value={country.value}>{country.label}</option>
+              ))}
+             {/* <option value="+1">🇺🇸 United States +1</option>
               <option value="+358">🇦🇽 Aland Islands +358</option>
               <option value="+213">🇩🇿 Algeria +213</option>
               <option value="+244">🇦🇴 Angola +244</option>
@@ -451,7 +578,7 @@ export default function PhoneNumber({
               <option value="+44">🇬🇧 United Kingdom +44</option>
               <option value="+1">🇺🇸 United States +1</option>
               <option value="+998">🇺🇿 Uzbekistan +998</option>
-              <option value="+58">🇻🇪 Venezuela +58</option>
+              <option value="+58">🇻🇪 Venezuela +58</option>*/}
             </select>
           </div>
           <div

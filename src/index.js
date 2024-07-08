@@ -178,6 +178,7 @@ export default function FirebaseUI({
             isResetPassword={isResetPassword}
             setResetPasswordOpen={setResetPasswordOpen}
             displayName={config?.displayName}
+            whitelistedCountries={config?.whitelistedCountries}
             formButtonStyles={config?.formButtonStyles}
             formDisabledStyles={config?.formDisabledStyles}
             formInputStyles={config?.formInputStyles}

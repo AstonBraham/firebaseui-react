@@ -12,7 +12,9 @@
     "publish": "rm -rf ./dist/ && npm run build && npm publish",
     "test": "jest"
   },
-  "dependencies": {},
+  "dependencies": {
+    "libphonenumber-js": "^1.11.4"
+  },
   "peerDependencies": {
     "firebase": "^10",
     "react": "^18.0.0"
