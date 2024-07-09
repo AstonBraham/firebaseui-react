@@ -7,7 +7,7 @@
 		exports["FirebaseUIReact"] = factory(require("react"));
 	else
 		root["FirebaseUIReact"] = factory(root["react"]);
-})(self, (__WEBPACK_EXTERNAL_MODULE_react__) => {
+})(this, (__WEBPACK_EXTERNAL_MODULE_react__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({

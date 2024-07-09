@@ -8,7 +8,7 @@ module.exports = {
     filename: "index.js",
     library: "FirebaseUIReact",
     libraryTarget: "umd",
-    // globalObject: "this"
+     globalObject: "this"
   },
   externals: {
     react: "react",
